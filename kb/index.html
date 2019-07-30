@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Euro Characters Keyboard</title>
+
+    <style> * { font-family: sans-serif; }</style>
+  </head>
+  <body>
+
+<script>
+
+function copyTextToClipboard(text) {
+  var textArea = document.createElement("textarea");
+  // Place in top-left corner of screen regardless of scroll position.
+  textArea.style.position = 'fixed';
+  textArea.style.top = 0;
+  textArea.style.left = 0;
+  // Ensure it has a small width and height. Setting to 1px / 1em
+  // doesn't work as this gives a negative w/h on some browsers.
+  textArea.style.width = '2em';
+  textArea.style.height = '2em';
+  // We don't need padding, reducing the size if it does flash render.
+  textArea.style.padding = 0;
+  // Clean up any borders.
+  textArea.style.border = 'none';
+  textArea.style.outline = 'none';
+  textArea.style.boxShadow = 'none';
+  // Avoid flash of white box if rendered for any reason.
+  textArea.style.background = 'transparent';
+  textArea.value = text;
+  document.body.appendChild(textArea);
+  textArea.select();
+  try {
+    var successful = document.execCommand('copy');
+    var msg = successful ? 'successful' : 'unsuccessful';
+    console.log('Copied ', text);
+  } catch (err) {
+    console.log('Oops, unable to copy', text);
+  }
+  document.body.removeChild(textArea);
+}
+
+var selectedIndex = -1;
+var selectedMode = '';
+var shiftDown = false;
+var modes = {
+  A: ['A', 'Â', 'À', 'Ä', 'Á', 'Ã', 'Æ', 'Ą', 'Å'],
+  a: ['a', 'â', 'à', 'ä', 'á', 'ã', 'æ', 'ą', 'å'],
+  O: ['O', 'Ô', '',  'Ö', 'Ó', 'Õ', 'Œ', 'Ő', 'Ø'],
+  o: ['o', 'ô', '',  'ö', 'ó', 'õ', 'œ', 'ő', 'ø'],
+  E: ['E', 'Ê', 'È', 'Ë', 'É', '', '', 'Ę', 'Ě' ],
+  e: ['e', 'ê', 'è', 'ë', 'é', '', '', 'ę', 'ě' ],
+  U: ['U', 'Û', 'Ù', 'Ü', 'Ú', '', 'Ŭ', 'Ű', 'Ů' ],
+  u: ['u', 'û', 'ù', 'ü', 'ú', '', 'ŭ',  'ű', 'ů' ],
+  I: ['I', 'Î', '',  'Ï', 'Í', '', '', '', '' ],
+  i: ['i', 'î', '',  'ï', 'í', '', '', '', '' ],
+  Y: ['Y', '', '', 'Ÿ', 'Ý','', '', '', '' ],
+  y: ['y', '', '', 'ÿ', 'ý','', '', '', '' ],
+  C: ['C', '','', '', 'Ć','', '', 'Ç', 'Č' ],
+  c: ['c', '','', '', 'ć','', '', 'ç', 'č' ],
+  N: ['N', '', '', '', 'Ń', 'Ñ','', '', 'Ň' ],
+  n: ['n', '', '', '','ń', 'ñ','', '', 'ň' ],
+  S: ['S', '','', '', 'Ś','', 'ß', 'Ș', 'Š' ],
+  s: ['s', '','', '', 'ś','', 'ß', 'ș', 'š' ],
+  Z: ['Z', 'Ż','', '', 'Ź','', '',  '','Ž' ],
+  z: ['z', 'ż','', '', 'ź','', '', '', 'ž' ],
+  L: ['L', '','', '', 'Ł','','', '', ''],
+  l: ['l', '','', '', 'ł','','', '', ''],
+  T: ['T', '','', '', '','', '', 'Ț', 'Ť' ],
+  t: ['t', '','', '', '','', '', 'ț', 'ť' ],
+  D: ['D', '','', '', '','', '', '', 'Ď' ],
+  d: ['d', '','', '', '','', '', '', 'ď' ]
+  //¡¿
+  // ř // Ďď
+};
+
+function displayAll() {
+  var out = '';
+  Object.keys(modes).forEach(function(letter, letterIndex) {
+    var mode = modes[letter];
+    if (letterIndex % 2 === 1 && shiftDown) return false;
+    if (letterIndex % 2 === 0 && !shiftDown) return false;
+
+    out += '<table style="width:100%; border: 1px #bbb solid;"><tbody><tr>';
+    mode.map(function(ch, index) {
+      var extra = '';
+      if (index === 0) extra = '; background: #fef0c0;';
+      var action = (index === 0) ? 'onmousedown="selectLetter(\''+letter+'\')" '
+        : 'onmousedown="selectLetterAndDigit(\''+letter+'\','+index+')" ';
+      out += '<td ' + action + ' '
+        + 'style="cursor: pointer; border: 1px #bbb solid; width: '+ (100 /mode.length) + '%;text-align:center;">'
+        + '<div style="padding-top: 3px; font-size: 1.5em; font-weight: bold' + extra + '">' + ch + '</div>'
+        + '</td>';
+    });
+    out += '</tr></tbody></table>';
+  });
+
+  var div = document.createElement('div');
+  div.innerHTML = '<h3 style="text-align:center;color: gray;margin: 5px 0px;">Copy to clipboard:</h3>' + out;
+  document.body.innerHTML = '';
+  document.body.appendChild(div);
+}
+
+function display() {
+  var mode = modes[selectedMode];
+  if (!mode) { return displayAll(); }
+
+  var elem = document.createElement('table');
+  elem.style.width = '100%';
+  elem.style.border = '1px #bbb solid';
+  var out = '';
+  mode.map(function(ch, index) {
+    var extra = '';
+    if (index === selectedIndex) extra = '; background: #fee0a0';
+    out += '<td onmouseDown="selectDigit(\''+index+'\')" '
+      +' style="cursor:pointer; border: 1px #bbb solid; vertical-align: top; width: '
+        + (100 /mode.length) + '%;text-align:center;">'
+     + '<div style="font-size: 12px; background: #eee;">' + index + '</div>'
+     + '<div style="padding-top: 3px; font-size: 1.5em; font-weight: bold' + extra + '">' + ch + '</div>'
+     + '</td>';
+  });
+  elem.innerHTML = out;
+  document.body.innerHTML = '';
+  document.body.appendChild(elem);
+}
+
+function selectDigit(digit) {
+  selectedIndex = digit;
+  var mode = modes[selectedMode];
+  if (!mode) return;
+  var char = mode[selectedIndex];
+  display();
+  if (char) copyTextToClipboard(char);
+  setTimeout(function() { selectedIndex = -1; selectedMode = ''; display(); }, 400);
+}
+
+function selectLetter(letter) {
+ selectedMode = letter;
+ selectedIndex = -1;
+ display();
+}
+
+function selectLetterAndDigit(letter, digit)  {
+  selectedMode = letter;
+  selectedIndex = digit;
+  display();
+  var mode = modes[letter];
+  var char = mode[digit];
+  if (char) copyTextToClipboard(char);
+  setTimeout(function() { selectedIndex = -1; selectedMode = ''; display(); }, 400);
+}
+
+
+display();
+document.addEventListener("keyup", function(e) {
+  if (e.key === 'Shift') { shiftDown = false; display(); }
+});
+
+document.addEventListener("keydown", function(e) {
+  if (e.key === 'Shift') {
+    shiftDown = true; display();
+  }
+  if (e.keyCode == 27) {
+    selectedMode = '';
+    selectedIndex = -1;
+    display();
+  } else if (e.keyCode>= 48 && e.keyCode <= 57) {
+    var digit = e.keyCode - 48;
+    if (digit >= 0) selectDigit(digit);
+  } else if (typeof modes[e.key] !== 'undefined') {
+    selectLetter(e.key);
+  }
+
+}, false);
+
+
+</script>
+
+  </body>
+</html>
+
